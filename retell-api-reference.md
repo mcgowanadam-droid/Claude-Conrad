@@ -15,6 +15,41 @@ Base URL: `https://api.retellai.com`
 
 ---
 
+## IMPORTANT: List Endpoint Migration (June 2026)
+
+As of the June 15, 2026 deprecation notice, **all legacy list endpoints have moved from `GET` to `POST`** and now require pagination params in a JSON body. Old `GET` versions still work today but will be removed.
+
+**Always use the new `POST` form** when listing resources:
+
+```
+POST https://api.retellai.com/list-<resource>
+Content-Type: application/json
+Authorization: Bearer YOUR_RETELL_API_KEY
+
+{
+  "limit": 1000,
+  "pagination_key": null,
+  "filter_criteria": { ... }   // optional, endpoint-specific
+}
+```
+
+To page through results, take the last item's id from the response and pass it as `pagination_key` on the next request.
+
+**Endpoints affected** (use `POST`, not `GET`):
+- `/list-agents`
+- `/list-conversation-flows`
+- `/list-retell-llms`
+- `/list-voices`
+- `/list-phone-numbers`
+- `/list-knowledge-bases`
+- `/list-chat`
+- `/list-test-runs` (pass `test_case_batch_job_id` in the body instead of the URL)
+- `/list-calls` — note: the old `POST /v2/list-calls` is also deprecated; use `POST /list-calls` (no `/v2` prefix)
+
+If you see SDK or n8n nodes calling these with `GET`, or hitting `/v2/list-calls`, update them.
+
+---
+
 ## API Workflow Overview
 
 Building a Retell voice agent requires two steps:
@@ -733,20 +768,26 @@ curl -X POST https://api.retellai.com/create-phone-call \
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/get-conversation-flow/{id}` | Get a conversation flow |
-| GET | `/list-conversation-flows` | List all conversation flows |
+| POST | `/list-conversation-flows` | List all conversation flows (body: `{limit, pagination_key}`) |
 | PATCH | `/update-conversation-flow/{id}` | Update a conversation flow |
 | DELETE | `/delete-conversation-flow/{id}` | Delete a conversation flow |
 | GET | `/get-agent/{id}` | Get a voice agent |
-| GET | `/list-agents` | List all voice agents |
+| POST | `/list-agents` | List all voice agents (body: `{limit, pagination_key}`) |
 | PATCH | `/update-agent/{id}` | Update a voice agent |
 | DELETE | `/delete-agent/{id}` | Delete a voice agent |
 | POST | `/publish-agent/{id}` | Publish an agent version |
+| GET | `/get-retell-llm/{id}` | Get a Retell LLM |
+| POST | `/list-retell-llms` | List all Retell LLMs (body: `{limit, pagination_key}`) |
 | POST | `/create-phone-call` | Create an outbound phone call |
 | POST | `/create-web-call` | Create a web call |
 | GET | `/get-call/{id}` | Get call details |
-| POST | `/list-calls` | List calls |
+| POST | `/list-calls` | List calls. **Do not use `/v2/list-calls` — deprecated.** |
+| POST | `/list-chat` | List chat sessions (body: `{limit, pagination_key}`) |
+| POST | `/list-test-runs` | List test runs. Pass `test_case_batch_job_id` in the body, not the URL. |
 | POST | `/search-voice` | Search available voices |
-| GET | `/list-voices` | List all voices |
+| POST | `/list-voices` | List all voices (body: `{limit, pagination_key}`) |
+| POST | `/list-phone-numbers` | List phone numbers (body: `{limit, pagination_key}`) |
+| POST | `/list-knowledge-bases` | List knowledge bases (body: `{limit, pagination_key}`) |
 
 ---
 
